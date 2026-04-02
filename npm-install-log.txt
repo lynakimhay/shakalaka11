@@ -1,0 +1,100 @@
+npm verbose cli /home/kimer/.nvm/versions/node/v22.20.0/bin/node /home/kimer/.nvm/versions/node/v22.20.0/bin/npm
+npm info using npm@11.8.0
+npm info using node@v22.20.0
+npm verbose title npm install
+npm verbose argv "install" "--loglevel" "verbose"
+npm verbose logfile logs-max:10 dir:/home/kimer/.npm/_logs/2026-03-15T09_43_25_538Z-
+npm verbose logfile /home/kimer/.npm/_logs/2026-03-15T09_43_25_538Z-debug-0.log
+npm http cache https://registry.npmjs.org/@nestjs%2fcommon 160ms (cache hit)
+npm http cache https://registry.npmjs.org/class-transformer 4ms (cache hit)
+npm http cache https://registry.npmjs.org/class-validator 4ms (cache hit)
+npm http cache https://registry.npmjs.org/reflect-metadata 4ms (cache hit)
+npm http cache https://registry.npmjs.org/rxjs 16ms (cache hit)
+npm http cache https://registry.npmjs.org/@nestjs%2fcore 5ms (cache hit)
+npm http cache https://registry.npmjs.org/@nestjs%2fmicroservices 5ms (cache hit)
+npm http cache https://registry.npmjs.org/@grpc%2fgrpc-js 4ms (cache hit)
+npm http cache https://registry.npmjs.org/@nestjs%2fwebsockets 10ms (cache hit)
+npm http cache https://registry.npmjs.org/@nestjs%2fplatform-socket.io 5ms (cache hit)
+npm http cache https://registry.npmjs.org/amqp-connection-manager 3ms (cache hit)
+npm http cache https://registry.npmjs.org/amqplib 2ms (cache hit)
+npm http cache https://registry.npmjs.org/cache-manager 3ms (cache hit)
+npm http cache https://registry.npmjs.org/ioredis 4ms (cache hit)
+npm http cache https://registry.npmjs.org/kafkajs 9ms (cache hit)
+npm http cache https://registry.npmjs.org/mqtt 4ms (cache hit)
+npm http cache https://registry.npmjs.org/nats 8ms (cache hit)
+npm http cache https://registry.npmjs.org/@nestjs%2fplatform-express 12ms (cache hit)
+npm http cache https://registry.npmjs.org/load-esm 6ms (cache hit)
+npm http cache https://registry.npmjs.org/iterare 8ms (cache hit)
+npm http cache https://registry.npmjs.org/file-type 13ms (cache hit)
+npm http cache https://registry.npmjs.org/path-to-regexp 17ms (cache hit)
+npm http cache https://registry.npmjs.org/uid 22ms (cache hit)
+npm http cache https://registry.npmjs.org/uid 27ms (cache hit)
+npm http cache https://registry.npmjs.org/iterare 68ms (cache hit)
+npm http cache https://registry.npmjs.org/fast-safe-stringify 76ms (cache hit)
+npm http fetch GET 200 https://registry.npmjs.org/@nuxt%2fopencollective 1001ms (cache miss)
+npm http cache https://registry.npmjs.org/@tokenizer%2finflate 16ms (cache hit)
+npm http cache https://registry.npmjs.org/@lukeed%2fcsprng 19ms (cache hit)
+npm http cache https://registry.npmjs.org/token-types 27ms (cache hit)
+npm http cache https://registry.npmjs.org/uint8array-extras 34ms (cache hit)
+npm http cache https://registry.npmjs.org/strtok3 45ms (cache hit)
+npm http cache https://registry.npmjs.org/@angular-devkit%2fcore 25ms (cache hit)
+npm http cache https://registry.npmjs.org/@angular-devkit%2fschematics 23ms (cache hit)
+npm verbose stack Error: could not resolve
+npm verbose stack     at PlaceDep.failPeerConflict (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:503:25)
+npm verbose stack     at new PlaceDep (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/place-dep.js:157:21)
+npm verbose stack     at #buildDepStep (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:934:18)
+npm verbose stack     at async Arborist.buildIdealTree (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:170:7)
+npm verbose stack     at async Promise.all (index 1)
+npm verbose stack     at async Arborist.reify (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:110:5)
+npm verbose stack     at async Install.exec (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/lib/commands/install.js:150:5)
+npm verbose stack     at async Npm.exec (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/lib/npm.js:208:9)
+npm verbose stack     at async module.exports (/home/kimer/.nvm/versions/node/v22.20.0/lib/node_modules/npm/lib/cli/entry.js:67:5)
+npm error code ERESOLVE
+npm error ERESOLVE could not resolve
+npm error
+npm error While resolving: @schematics/schematics@0.0.11
+npm error Found: rxjs@7.8.1
+npm error node_modules/rxjs
+npm error   rxjs@"^7.8.1" from inquirer@9.2.15
+npm error   node_modules/@angular-devkit/schematics-cli/node_modules/inquirer
+npm error     inquirer@"9.2.15" from @angular-devkit/schematics-cli@17.3.11
+npm error     node_modules/@angular-devkit/schematics-cli
+npm error       @angular-devkit/schematics-cli@"17.3.11" from @nestjs/cli@10.4.9
+npm error       node_modules/@nestjs/cli
+npm error         dev @nestjs/cli@"^10.4.9" from the root project
+npm error   peer rxjs@"^7.2.0" from @nestjs/typeorm@11.0.0
+npm error   node_modules/@nestjs/typeorm
+npm error     @nestjs/typeorm@"^11.0.0" from the root project
+npm error   3 more (inquirer, @nestjs/common, @nestjs/core)
+npm error
+npm error Could not resolve dependency:
+npm error peer rxjs@"^5.5.2" from @schematics/schematics@0.0.11
+npm error node_modules/@schematics/schematics
+npm error   @schematics/schematics@"^0.0.11" from the root project
+npm error   @schematics/schematics@"0.0.11" from @angular-devkit/schematics@0.0.42
+npm error   node_modules/@angular-devkit/schematics
+npm error     peer @angular-devkit/schematics@"0.0.42" from @schematics/schematics@0.0.11
+npm error
+npm error Conflicting peer dependency: rxjs@5.5.12
+npm error node_modules/rxjs
+npm error   peer rxjs@"^5.5.2" from @schematics/schematics@0.0.11
+npm error   node_modules/@schematics/schematics
+npm error     @schematics/schematics@"^0.0.11" from the root project
+npm error     @schematics/schematics@"0.0.11" from @angular-devkit/schematics@0.0.42
+npm error     node_modules/@angular-devkit/schematics
+npm error       peer @angular-devkit/schematics@"0.0.42" from @schematics/schematics@0.0.11
+npm error
+npm error Fix the upstream dependency conflict, or retry
+npm error this command with --force or --legacy-peer-deps
+npm error to accept an incorrect (and potentially broken) dependency resolution.
+npm error
+npm error
+npm error For a full report see:
+npm error /home/kimer/.npm/_logs/2026-03-15T09_43_25_538Z-eresolve-report.txt
+npm verbose cwd /home/kimer/Movie
+npm verbose os Linux 6.14.0-37-generic
+npm verbose node v22.20.0
+npm verbose npm  v11.8.0
+npm verbose exit 1
+npm verbose code 1
+npm error A complete log of this run can be found in: /home/kimer/.npm/_logs/2026-03-15T09_43_25_538Z-debug-0.log

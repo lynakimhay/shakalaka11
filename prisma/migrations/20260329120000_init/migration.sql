@@ -1,0 +1,2 @@
+-- Baseline migration: mark existing DB schema as managed by Prisma
+-- This file is intentionally empty (no changes)

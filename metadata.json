@@ -1,0 +1,5 @@
+{
+  "name": "Next.js: CineManage",
+  "description": "A modern movie management system with video previews, responsive design, and an admin dashboard for CRUD operations.",
+  "requestFramePermissions": []
+}

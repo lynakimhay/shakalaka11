@@ -1,0 +1,14 @@
+node_modules/
+.env
+/.next
+build
+dist
+/.vercel
+.DS_Storenode_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
