@@ -7,6 +7,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 
 
+
 interface NavbarProps {
   onSearch?: (query: string) => void; // make it optional
   initialQuery?: string;
@@ -37,6 +38,7 @@ const Navbar = ({ onSearch, initialQuery = "", isSearching }: NavbarProps) => {
     <nav className="sticky top-0 z-50 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/5">
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
+
         <Link href="/" className="flex items-center gap-2 cursor-pointer">
   <Image
     src="/uploads/logo.png"   // correct path
