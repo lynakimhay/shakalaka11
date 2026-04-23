@@ -353,10 +353,20 @@ export default function AdminPage() {
               setIsFormOpen(false);
               setEditingMovie(null);
             }}
-            onSuccess={async (data: Omit<Movie, 'id'>) => {
-              // Use the ID of editingMovie for updates (keep as string if that's what DB uses)
+            onSuccess={async (data: Partial<Movie>) => {
+              // Ensure required fields are present before submitting
+              const movieData: Omit<Movie, 'id'> = {
+                title: data.title || '',
+                duration: data.duration || '',
+                type: data.type || 'Action',
+                subtitle: data.subtitle || 'EN',
+                videoUrl: data.videoUrl || '',
+                posterUrl: data.posterUrl || '',
+                year: data.year || '2024',
+              };
+              
               await handleSubmitMovie(
-                data,
+                movieData,
                 editingMovie?.id ?? undefined
               );
             }}

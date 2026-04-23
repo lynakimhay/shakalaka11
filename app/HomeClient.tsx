@@ -51,8 +51,8 @@ export default function HomeClient() {
 
   // ✅ FETCH DATA (Debounce)
   useEffect(() => {
-    // Debounced fetch + sync URL (replace to avoid history spam)
-    const delay = setTimeout(async () => {
+    // Initial load
+    const loadInitialData = async () => {
       setIsLoading(true);
       const data = await getMovies(
         search,
@@ -62,19 +62,16 @@ export default function HomeClient() {
       setMovies(data);
       setVisibleCount(8);
       setIsLoading(false);
+    };
 
-      // sync URL params without adding history entry
-      const params = new URLSearchParams();
-      if (search) params.set("search", search);
-      if (typeFilter !== "All") params.set("type", typeFilter);
+    // Load immediately on mount
+    loadInitialData();
 
-      const queryString = params.toString();
-      // Use replace so typing doesn't create many history entries
-      router.replace(queryString ? `/?${queryString}` : "/");
-    }, 400);
+    // Debounced fetch + sync URL (replace to avoid history spam)
+    const delay = setTimeout(loadInitialData, 400);
 
     return () => clearTimeout(delay);
-  }, [search, typeFilter, router]);
+  }, [search, typeFilter]); // Remove router dependency to prevent infinite loops
 
   // ✅ SEARCH
   const handleSearch = (query: string) => {

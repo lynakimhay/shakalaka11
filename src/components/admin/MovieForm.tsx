@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Movie, SubtitleLanguage } from '@/src/types';
 import { MOVIE_TYPES } from '@/src/constants';
@@ -9,11 +9,11 @@ import { MOVIE_TYPES } from '@/src/constants';
 interface MovieFormProps {
   movie?: Movie;
   onClose: () => void;
-  onSuccess?: (data: Omit<Movie, 'id'>) => void | Promise<void>;
+  onSuccess?: (movie: Partial<Movie>) => void;
 }
 
-const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
-  const [formData, setFormData] = useState<Omit<Movie, 'id'>>({
+export default function MovieForm({ movie, onClose, onSuccess }: MovieFormProps) {
+  const [formData, setFormData] = useState({
     title: movie?.title || '',
     duration: movie?.duration || '',
     type: movie?.type || MOVIE_TYPES[0],
@@ -30,6 +30,10 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
   const [uploading, setUploading] = useState(false);
   const [videoPreview, setVideoPreview] = useState<string | null>(movie?.videoUrl ?? null);
   const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [youtubeUrl, setYoutubeUrl] = useState<string>(movie?.videoUrl || '');
+  const [videoSource, setVideoSource] = useState<'upload' | 'youtube'>(
+    movie?.videoUrl?.includes('youtube') ? 'youtube' : 'upload'
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +57,9 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
       setPreview(finalPoster);
     }
 
-    if (!finalPoster) {
-      setError('Please provide a poster URL');
+    // Only require poster if no video is provided
+    if (!finalPoster && !formData.videoUrl) {
+      setError('Please provide a poster URL or video');
       setLoading(false);
       return;
     }
@@ -62,8 +67,6 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
     try {
       const payload: any = { ...formData };
       payload.posterUrl = finalPoster;
-      // Keep videoUrl even if empty - it's optional in the database
-      // if (!payload.videoUrl) delete payload.videoUrl;
 
       await onSuccess?.(payload);
       onClose();
@@ -74,16 +77,20 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
     }
   };
 
-  const applyPosterUrl = (url?: string) => {
-    if (!url || !url.trim()) return;
-    const trimmed = url.trim();
-    if (!(trimmed.startsWith('/') || trimmed.startsWith('http') || trimmed.startsWith('data:'))) {
-      setError('Invalid poster URL');
+  const handlePosterUrlSubmit = () => {
+    const trimmed = posterUrlInput.trim();
+    if (!trimmed) {
+      setError('Please enter a poster URL');
       return;
     }
+
+    if (!(trimmed.startsWith('/') || trimmed.startsWith('http') || trimmed.startsWith('data:'))) {
+      setError('Invalid poster URL format');
+      return;
+    }
+
     setFormData({ ...formData, posterUrl: trimmed });
     setPreview(trimmed);
-    setPosterUrlInput('');
     setError(null);
   };
 
@@ -94,7 +101,6 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
     setError(null);
     setUploading(true);
     try {
-      // Upload to server-side Cloudinary API
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       uploadFormData.append('folder', 'movie-posters');
@@ -110,7 +116,6 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
         throw new Error(result.error || 'Upload failed');
       }
 
-      // Use Cloudinary URL from server
       setFormData({ ...formData, posterUrl: result.url || '' });
       setPreview(result.url || null);
       setPosterUrlInput('');
@@ -127,7 +132,6 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
 
     setError(null);
     
-    // Check file size (50MB limit for Vercel)
     const maxSize = 50 * 1024 * 1024; // 50MB
     if (file.size > maxSize) {
       setError('Video file too large. Maximum size is 50MB.');
@@ -136,7 +140,6 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
 
     setUploadingVideo(true);
     try {
-      // Upload to server-side Cloudinary API
       const uploadFormData = new FormData();
       uploadFormData.append('file', file);
       uploadFormData.append('folder', 'movie-videos');
@@ -152,13 +155,44 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
         throw new Error(result.error || 'Upload failed');
       }
 
-      // Use Cloudinary URL from server
       setFormData({ ...formData, videoUrl: result.url || '' });
       setVideoPreview(result.url || null);
+      setVideoSource('upload');
     } catch (err: any) {
       setError(err?.message || 'Upload failed');
     } finally {
       setUploadingVideo(false);
+    }
+  };
+
+  const handleYoutubeUrlChange = (url: string) => {
+    setYoutubeUrl(url);
+    
+    if (url && url.includes('youtube.com')) {
+      const videoId = extractYoutubeId(url);
+      if (videoId) {
+        const embedUrl = `https://www.youtube.com/embed/${videoId}`;
+        setFormData({ ...formData, videoUrl: embedUrl });
+        setVideoPreview(embedUrl);
+        setVideoSource('youtube');
+      }
+    } else if (!url) {
+      setFormData({ ...formData, videoUrl: '' });
+      setVideoPreview(null);
+      setVideoSource('upload');
+    }
+  };
+
+  const extractYoutubeId = (url: string): string | null => {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
+    return match ? match[1] : null;
+  };
+
+  const switchVideoSource = (source: 'upload' | 'youtube') => {
+    setVideoSource(source);
+    if (source === 'upload') {
+      setYoutubeUrl('');
+      setVideoPreview(null);
     }
   };
 
@@ -262,6 +296,23 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
                 />
                 {uploading && <span className="text-xs text-zinc-400">Uploading...</span>}
               </div>
+              
+              <div className="flex items-center gap-3">
+                <input
+                  type="url"
+                  value={posterUrlInput}
+                  onChange={(e) => setPosterUrlInput(e.target.value)}
+                  placeholder="https://example.com/poster-image.jpg"
+                  className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#e5a00d] outline-none text-white transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={handlePosterUrlSubmit}
+                  className="px-4 py-3 bg-[#e5a00d] text-black font-medium rounded-xl hover:bg-[#e5a00d]/90 transition-all"
+                >
+                  Use URL
+                </button>
+              </div>
             </div>
 
             {preview && (
@@ -272,27 +323,75 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Video File (Trailer)</label>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={handleVideoSelect}
-                  className="text-sm text-white"
-                />
-                {uploadingVideo && <span className="text-xs text-zinc-400">Uploading video...</span>}
-              </div>
+            <label className="text-xs font-bold text-zinc-500 uppercase tracking-wider">Video Source</label>
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => switchVideoSource('upload')}
+                className={`flex-1 px-4 py-2 rounded-xl font-medium transition-all ${
+                  videoSource === 'upload'
+                    ? 'bg-[#e5a00d] text-black'
+                    : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                Upload Video
+              </button>
+              <button
+                type="button"
+                onClick={() => switchVideoSource('youtube')}
+                className={`flex-1 px-4 py-2 rounded-xl font-medium transition-all ${
+                  videoSource === 'youtube'
+                    ? 'bg-[#e5a00d] text-black'
+                    : 'bg-white/5 text-white hover:bg-white/10'
+                }`}
+              >
+                YouTube URL
+              </button>
             </div>
 
-            {videoPreview && (
-              <div className="mt-0 w-48 h-32 rounded overflow-hidden border border-white/10">
-                <video 
-                  src={videoPreview} 
-                  controls={false}
-                  muted
-                  className="w-full h-full object-cover"
+            {videoSource === 'upload' ? (
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <input
+                    type="file"
+                    accept="video/*"
+                    onChange={handleVideoSelect}
+                    className="text-sm text-white"
+                  />
+                  {uploadingVideo && <span className="text-xs text-zinc-400">Uploading video...</span>}
+                </div>
+
+                {videoPreview && (
+                  <div className="mt-0 w-48 h-32 rounded overflow-hidden border border-white/10">
+                    <video 
+                      src={videoPreview} 
+                      controls={false}
+                      muted
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <input
+                  type="url"
+                  value={youtubeUrl}
+                  onChange={(e) => handleYoutubeUrlChange(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-[#e5a00d] outline-none text-white transition-all"
                 />
+
+                {videoPreview && (
+                  <div className="mt-0 w-48 h-32 rounded overflow-hidden border border-white/10">
+                    <iframe
+                      src={videoPreview}
+                      className="w-full h-full"
+                      allowFullScreen
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -308,15 +407,20 @@ const MovieForm = ({ movie, onClose, onSuccess }: MovieFormProps) => {
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-[#e5a00d] text-black font-bold rounded-xl hover:scale-[1.02] transition-all shadow-lg shadow-[#e5a00d]/20"
+              className="flex-1 px-4 py-3 bg-[#e5a00d] text-black font-bold rounded-xl hover:bg-[#e5a00d]/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              {loading ? 'Saving...' : movie ? 'Save Changes' : 'Create Movie'}
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                movie ? 'Update Movie' : 'Create Movie'
+              )}
             </button>
           </div>
         </form>
       </motion.div>
     </div>
   );
-};
-
-export default MovieForm;
+}
