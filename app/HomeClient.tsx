@@ -92,13 +92,13 @@ export default function HomeClient() {
   const handleLoadMore = () => {
     setIsLoadingMore(true);
     setTimeout(() => {
-      setVisibleCount((prev) => prev + 8);
+      setVisibleCount(prev => prev + 4);
       setIsLoadingMore(false);
-    }, 300);
+    }, 1000);
   };
 
-  const visibleMovies = movies.slice(0, visibleCount);
-  const hasMore = movies.length > visibleMovies.length;
+  const visibleMovies = movies; // Show all movies
+  const hasMore = false; // No load more needed since we show all
 
   return (
     <div className="min-h-screen bg-black text-white">

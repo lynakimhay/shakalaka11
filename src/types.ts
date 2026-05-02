@@ -8,6 +8,7 @@ export interface Movie {
   subtitle: SubtitleLanguage;
   videoUrl: string;
   posterUrl?: string;
+  poster?: string; // Legacy field from database
   year?: string;
 }
 

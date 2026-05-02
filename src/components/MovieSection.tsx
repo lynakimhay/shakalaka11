@@ -15,7 +15,7 @@ const VideoCard = ({ movie }: { movie: Movie }) => {
           {movie.videoUrl ? (
             <video
               src={movie.videoUrl}
-              poster={movie.posterUrl}
+              poster={movie.posterUrl || movie.poster}
               muted
               loop
               playsInline
@@ -24,7 +24,7 @@ const VideoCard = ({ movie }: { movie: Movie }) => {
             />
           ) : (
             <img
-              src={movie.posterUrl || `https://picsum.photos/seed/${movie.id}/1000/562`}
+              src={movie.posterUrl || movie.poster || `https://picsum.photos/seed/${movie.id}/1000/562`}
               alt={movie.title}
               className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-all duration-500"
               onError={(e) => {
@@ -114,7 +114,7 @@ const PosterCard = ({ movie }: { movie: Movie }) => {
                }}>
             {/* Main Image - Dramatic Standing Poster Effect */}
             <img
-              src={movie.posterUrl || `https://picsum.photos/seed/${movie.id}/400/1200`}
+              src={movie.posterUrl || movie.poster || `https://picsum.photos/seed/${movie.id}/400/1200`}
               alt={movie.title}
               className="w-full h-full object-cover opacity-100 group-hover:opacity-100 transition-all duration-500"
               style={{
@@ -187,8 +187,8 @@ interface MovieSectionProps {
   showAll?: boolean;
 }
 
-export default function MovieSection({ title, movies, type = 'poster', showAll = false }: MovieSectionProps) {
-  const displayMovies = showAll ? movies : movies.slice(0, 8);
+export default function MovieSection({ title, movies, type = 'poster', showAll = true }: MovieSectionProps) {
+  const displayMovies = movies;
 
   return (
     <section className="space-y-6">

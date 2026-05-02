@@ -7,18 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Movie {
-  title     String
-  duration  String
-  type      String
-  subtitle  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  poster    String?
-  posterUrl String?
-  videoUrl  String?
-  id        Int      @id @default(autoincrement())
-  year      Int?
+model CustomSection {
+  id            String   @id
+  title         String
+  content       String
+  imageUrl      String
+  imagePosition String
+  page          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
 }
 
 model HeroContent {
@@ -27,16 +24,19 @@ model HeroContent {
   subtitle   String
   imageUrl   String
   buttonText String
-  updatedAt  DateTime @updatedAt
+  updatedAt  DateTime @default(now()) @updatedAt
 }
 
-model CustomSection {
-  id            String   @id @default(cuid())
-  title         String
-  content       String
-  imageUrl      String
-  imagePosition String
-  page          String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+model Movie {
+  title     String
+  duration  String
+  type      String
+  subtitle  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  poster    String?
+  id        Int      @id @default(autoincrement())
+  year      Int?
+  posterUrl String?
+  videoUrl  String?
 }

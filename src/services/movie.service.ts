@@ -32,7 +32,8 @@ function mapDbMovieToDto(m: any) {
   if (!m) return m;
   const dto: any = {
     ...m,
-    posterUrl: m.poster ?? undefined,
+    posterUrl: m.poster ?? m.posterUrl ?? undefined,
+    poster: m.poster ?? undefined, // Keep original poster field
     videoUrl: m.videoUrl ?? undefined,
   };
   if (typeof dto.id === "number") dto.id = String(dto.id);
