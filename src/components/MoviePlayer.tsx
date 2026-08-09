@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Movie } from '@/src/types';
 import { X, Play, Pause, Volume2, VolumeX, Maximize2, SkipBack, SkipForward, Heart, Share2, Info, ExternalLink } from 'lucide-react';
+import PosterImage from './PosterImage';
 
 interface MoviePlayerProps {
   movie: Movie;
@@ -172,11 +173,15 @@ export default function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps
           />
           ) : (
             // No Video - Show Poster Only
-            <img 
-              src={movie.posterUrl} 
-              alt={movie.title}
-              className="max-w-full max-h-full object-contain"
-            />
+            <div className="relative w-full max-w-3xl aspect-video">
+              <PosterImage
+                src={movie.posterUrl}
+                poster={movie.poster}
+                alt={movie.title}
+                fit="contain"
+                className="w-full h-full object-contain"
+              />
+            </div>
           )}
 
           {/* Loading Overlay */}
@@ -190,16 +195,18 @@ export default function MoviePlayer({ movie, isOpen, onClose }: MoviePlayerProps
           )}
 
           {/* No Video Available */}
-          {!movie.videoUrl && movie.posterUrl && (
+          {!movie.videoUrl && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <img 
-                src={movie.posterUrl} 
-                alt={movie.title}
-                className="max-w-full max-h-full object-contain"
-              />
+              <div className="relative w-full max-w-3xl aspect-video">
+                <PosterImage
+                  src={movie.posterUrl}
+                  poster={movie.poster}
+                  alt={movie.title}
+                />
+              </div>
               <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
                 <div className="text-center">
-                  <Play size={48} className="text-white mb-2" />
+                  <Play size={48} className="text-white mb-2 mx-auto" />
                   <p className="text-white text-lg">Video not available</p>
                 </div>
               </div>

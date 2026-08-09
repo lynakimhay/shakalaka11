@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Movie, SubtitleLanguage } from '@/src/types';
 import { MOVIE_TYPES } from '@/src/constants';
+import PosterImage from '@/src/components/PosterImage';
 
 interface MovieFormProps {
   movie?: Movie;
@@ -316,8 +317,8 @@ export default function MovieForm({ movie, onClose, onSuccess }: MovieFormProps)
             </div>
 
             {preview && (
-              <div className="mt-0 w-48 h-64 rounded overflow-hidden border border-white/10">
-                <img src={preview} alt="poster preview" className="w-full h-full object-cover" />
+              <div className="mt-0 relative w-48 h-64 rounded overflow-hidden border border-white/10 bg-zinc-900">
+                <PosterImage src={preview} alt="poster preview" />
               </div>
             )}
           </div>

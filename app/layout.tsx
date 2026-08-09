@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Outfit } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
-  title: "Shakalaka Movie ",
-  description: "Shakalaka Movie.",
+  title: "Shakalaka Movie",
+  description: "Watch movies on Shakalaka Movie.",
 };
 
 export default function RootLayout({
@@ -16,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.className} bg-[#0a0a0a] text-white min-h-screen`}>
+      <body className={`${outfit.variable} font-sans bg-black text-white min-h-screen`}>
         {children}
       </body>
     </html>

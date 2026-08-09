@@ -16,9 +16,9 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "strict": true,
-    "module": "commonjs",
+    "module": "esnext",
     "target": "es2017",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "plugins": [
       {
         "name": "next"

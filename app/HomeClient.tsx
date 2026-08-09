@@ -1,193 +1,272 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
-import Navbar from "@/src/components/Navbar";
-import MovieSection from "@/src/components/MovieSection";
-import Footer from "@/src/components/Footer";
+import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { Search } from 'lucide-react';
+import Navbar from '@/src/components/Navbar';
+import MovieSection from '@/src/components/MovieSection';
+import FeaturedHero from '@/src/components/FeaturedHero';
+import Footer from '@/src/components/Footer';
+import {
+  MovieGridSkeleton,
+  HomeSectionsSkeleton,
+} from '@/src/components/MovieCardSkeleton';
+import { MOVIE_TYPES } from '@/src/constants';
+import { Movie } from '@/src/types';
 
-import PromotionSlider from "@/src/components/PromotionSlider";
+const HOME_LATEST_LIMIT = 10;
+const HOME_SECTION_LIMIT = 14;
 
-import { MOVIE_TYPES } from "@/src/constants";
+type HomeSection = { title: string; movies: Movie[] };
 
-// ✅ FETCH FROM API
-async function getMovies(search?: string, type?: string) {
+async function getMovies(
+  search?: string,
+  type?: string,
+  limit?: number
+): Promise<Movie[]> {
   try {
-    let url = "/api/movies";
+    let url = '/api/movies';
     const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    if (type) params.set('type', type);
+    if (limit && limit > 0) params.set('limit', String(limit));
+    if (params.toString()) url += `?${params.toString()}`;
 
-    if (search) params.set("search", search);
-    if (type) params.set("type", type);
-
-    if (params.toString()) {
-      url += `?${params.toString()}`;
-    }
-
-    const res = await fetch(url, { cache: "no-store" });
-
-    if (!res.ok) throw new Error("Failed to fetch movies");
-
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) throw new Error('Failed to fetch movies');
     return await res.json();
   } catch (error) {
-    console.error("Error fetching movies:", error);
+    console.error('Error fetching movies:', error);
     return [];
   }
 }
 
+/** Latest (10) + each genre (14) in parallel — fills rows without loading the full catalog. */
+async function getHomeFeed(): Promise<{ heroMovies: Movie[]; sections: HomeSection[] }> {
+  const [latest, ...genreLists] = await Promise.all([
+    getMovies(undefined, undefined, HOME_LATEST_LIMIT),
+    ...MOVIE_TYPES.map((type) => getMovies(undefined, type, HOME_SECTION_LIMIT)),
+  ]);
+
+  const sections: HomeSection[] = [
+    { title: 'Latest', movies: latest },
+    ...MOVIE_TYPES.map((type, i) => ({
+      title: type,
+      movies: genreLists[i] || [],
+    })).filter((s) => s.movies.length > 0),
+  ];
+
+  return { heroMovies: latest, sections };
+}
+
 export default function HomeClient() {
   const searchParams = useSearchParams();
-  const router = useRouter();
-
-  // Initialize from URL params once
-  const [search, setSearch] = useState<string>(searchParams.get("search") || "");
-  const [typeFilter, setTypeFilter] = useState<string>(
-    searchParams.get("type") || "All"
-  );
-  const [movies, setMovies] = useState<any[]>([]);
-  const [visibleCount, setVisibleCount] = useState(8);
+  const [search, setSearch] = useState(searchParams.get('search') || '');
+  const [searchInput, setSearchInput] = useState(searchParams.get('search') || '');
+  const [activeNav, setActiveNav] = useState('Home');
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-  // ✅ FETCH DATA (Debounce)
+  const typeFilter =
+    activeNav === 'Home' || activeNav === 'Movies' ? undefined : activeNav;
+
+  const isHomeFeed = activeNav === 'Home' && !search.trim();
+  const showBrowseGrid = !isHomeFeed;
+  const showHomeHero = isHomeFeed && !isLoading && movies.length > 0;
+
   useEffect(() => {
-    // Initial load
-    const loadInitialData = async () => {
-      setIsLoading(true);
-      const data = await getMovies(
-        search,
-        typeFilter === "All" ? undefined : typeFilter
-      );
+    let cancelled = false;
 
-      setMovies(data);
-      setVisibleCount(8);
+    const load = async () => {
+      setIsLoading(true);
+
+      if (isHomeFeed) {
+        const { heroMovies, sections } = await getHomeFeed();
+        if (cancelled) return;
+        setMovies(heroMovies);
+        setHomeSections(sections);
+      } else {
+        const data = await getMovies(search || undefined, typeFilter);
+        if (cancelled) return;
+        setMovies(data);
+        setHomeSections([]);
+      }
+
       setIsLoading(false);
+      setIsSearching(false);
     };
 
-    // Load immediately on mount
-    loadInitialData();
+    const delay = setTimeout(load, search ? 350 : 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(delay);
+    };
+  }, [search, typeFilter, isHomeFeed]);
 
-    // Debounced fetch + sync URL (replace to avoid history spam)
-    const delay = setTimeout(loadInitialData, 400);
-
-    return () => clearTimeout(delay);
-  }, [search, typeFilter]); // Remove router dependency to prevent infinite loops
-
-  // ✅ SEARCH
-  const handleSearch = (query: string) => {
-    setIsSearching(true);
-    setSearch(query);
-    setTimeout(() => {
-      setIsSearching(false);
-    }, 500);
-  };
-
-  // ✅ FILTER
-  const handleTypeFilter = (newType: string) => {
+  const handleNavChange = (nav: string) => {
+    if (nav === activeNav && !search) return;
     setIsLoading(true);
-    setTypeFilter(newType);
+    setMovies([]);
+    setHomeSections([]);
+    setActiveNav(nav);
+    if (nav === 'Home') {
+      setSearch('');
+      setSearchInput('');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // ✅ LOAD MORE
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    setTimeout(() => {
-      setVisibleCount(prev => prev + 4);
-      setIsLoadingMore(false);
-    }, 1000);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSearching(true);
+    setIsLoading(true);
+    setMovies([]);
+    setHomeSections([]);
+    setSearch(searchInput.trim());
+    if (searchInput.trim() && activeNav === 'Home') {
+      setActiveNav('Movies');
+    }
   };
 
-  const visibleMovies = movies; // Show all movies
-  const hasMore = false; // No load more needed since we show all
+  useEffect(() => {
+    const id = setTimeout(() => {
+      if (searchInput.trim() !== search) {
+        setIsSearching(true);
+        setIsLoading(true);
+        setMovies([]);
+        setHomeSections([]);
+        setSearch(searchInput.trim());
+        if (searchInput.trim() && activeNav === 'Home') {
+          setActiveNav('Movies');
+        }
+      }
+    }, 400);
+    return () => clearTimeout(id);
+  }, [searchInput]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pageTitle =
+    search.trim()
+      ? `Results for “${search.trim()}”`
+      : activeNav === 'Movies'
+        ? 'Movies'
+        : activeNav;
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Navbar onSearch={handleSearch} initialQuery={search} isSearching={isSearching} />
+      <Navbar
+        activeNav={activeNav}
+        onNavChange={handleNavChange}
+        isSearching={isSearching}
+        overHero={showHomeHero}
+      />
 
-      <main className="p-4 max-w-[1400px] mx-auto">
-        {/* PROMOTION SLIDER */}
-        <div className="mb-8">
-          <PromotionSlider />
-        </div>
+      {showHomeHero ? (
+        <FeaturedHero movies={movies} />
+      ) : (
+        <div className="h-[64px] sm:h-[76px]" aria-hidden />
+      )}
 
-
-        {/* FILTER */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-3">
-            <h2 className="text-sm text-zinc-400">Filter by Type</h2>
-            {isLoading && (
-              <div className="w-4 h-4 border-2 border-[#e5a00d] border-t-transparent rounded-full animate-spin" />
-            )}
-          </div>
-          <div className="flex flex-wrap gap-3">
-            {["All", ...MOVIE_TYPES].map((t) => (
-              <button
-                key={t}
-                onClick={() => handleTypeFilter(t)}
-                disabled={isLoading}
-                className={`px-5 py-2 rounded-full border transition-all
-                  ${
-                    typeFilter === t
-                      ? "bg-[#e5a00d] text-black"
-                      : "bg-white/5 text-white hover:bg-white/10"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* LOADING SKELETON */}
-        {isLoading && movies.length === 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 mb-8">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="aspect-[2/3] bg-zinc-800 rounded-2xl animate-pulse" />
-            ))}
-          </div>
-        )}
-
-        {/* EMPTY */}
-        {!isLoading && movies.length === 0 && (
-          <div className="text-center py-20 text-zinc-400">
-            <div className="w-20 h-20 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
-              🎬
+      <main className={showBrowseGrid ? 'pt-2' : undefined}>
+        {showBrowseGrid && (
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+            <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span
+                    aria-hidden
+                    className="h-7 sm:h-8 w-1 shrink-0 rounded-full bg-gradient-to-b from-[#f0c94a] via-[var(--color-brand)] to-[#c4890a]"
+                  />
+                  <h1 className="text-3xl sm:text-4xl font-bold text-white">{pageTitle}</h1>
+                </div>
+                {isLoading ? (
+                  <div className="mt-2 ml-5 h-4 w-20 rounded bg-[#1a1a1a] animate-pulse" />
+                ) : (
+                  <p className="mt-1 ml-5 text-sm text-white/45">{movies.length} shown</p>
+                )}
+              </div>
+              <form onSubmit={handleSearchSubmit} className="w-full sm:max-w-sm">
+                <div className="relative">
+                  <Search
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"
+                    size={18}
+                  />
+                  <input
+                    type="search"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    placeholder="Search titles..."
+                    className="w-full rounded-full bg-[#1c1c1c] border border-white/10 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--color-brand)]/50"
+                  />
+                </div>
+              </form>
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No Movies Found</h3>
-            <p className="text-sm text-zinc-500">
-              {search ? 'Try adjusting your search terms' : 'No movies available yet'}
-            </p>
           </div>
         )}
 
-        {/* MOVIES */}
-        {!isLoading && movies.length > 0 && (
-          <MovieSection
-            title="Movies"
-            movies={visibleMovies}
-            type="video"
-          />
-        )}
-
-        {/* LOAD MORE */}
-        {hasMore && (
-          <div className="flex justify-center mt-8">
-            <button
-              onClick={handleLoadMore}
-              disabled={isLoadingMore}
-              className="px-6 py-3 bg-[#e5a00d] text-black rounded-xl font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
-            >
-              {isLoadingMore ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                  Loading...
-                </>
-              ) : (
-                'Load More'
-              )}
-            </button>
+        {!showBrowseGrid && !isLoading && (
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-5">
+            <form onSubmit={handleSearchSubmit} className="max-w-md ml-auto">
+              <div className="relative">
+                <Search
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40"
+                  size={18}
+                />
+                <input
+                  type="search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  placeholder="Search titles..."
+                  className="w-full rounded-full bg-[#1c1c1c] border border-white/10 py-2.5 pl-11 pr-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-[var(--color-brand)]/50"
+                />
+              </div>
+            </form>
           </div>
         )}
+
+        <div className="pb-10 space-y-10">
+          {isLoading && showBrowseGrid && <MovieGridSkeleton count={10} />}
+          {isLoading && !showBrowseGrid && <HomeSectionsSkeleton />}
+
+          {!isLoading && movies.length === 0 && homeSections.length === 0 && (
+            <div className="text-center py-24 text-white/50">
+              <h3 className="text-xl font-bold text-white mb-2">No Movies Found</h3>
+              <p className="text-sm">
+                {search ? 'Try adjusting your search terms' : 'No movies available yet'}
+              </p>
+            </div>
+          )}
+
+          {!isLoading && movies.length > 0 && showBrowseGrid && (
+            <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+              <MovieSection
+                title={pageTitle}
+                movies={movies}
+                mode="grid"
+                layout="portrait"
+                showCount={false}
+              />
+            </div>
+          )}
+
+          {!isLoading && !showBrowseGrid && homeSections.length > 0 && (
+            <>
+              {homeSections.map((section) => (
+                <MovieSection
+                  key={section.title}
+                  title={section.title}
+                  movies={section.movies}
+                  layout={section.title === 'Latest' ? 'landscape' : 'portrait'}
+                  mode="row"
+                  onSeeAll={() =>
+                    handleNavChange(section.title === 'Latest' ? 'Movies' : section.title)
+                  }
+                />
+              ))}
+            </>
+          )}
+        </div>
 
         <Footer />
       </main>
