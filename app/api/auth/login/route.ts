@@ -3,9 +3,14 @@ import {
   SESSION_COOKIE,
   SESSION_MAX_AGE,
   createSessionToken,
-  validateAdminLogin,
 } from '@/src/lib/auth';
+import { adminService } from '@/src/services/admin.service';
 
+/**
+ * POST /api/auth/login
+ * Body: { email, password }
+ * Only AdminUser rows with role=admin can sign in.
+ */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
@@ -19,18 +24,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    if (!validateAdminLogin(email, password)) {
+    const admin = await adminService.authenticate(email, password);
+    if (!admin) {
       return NextResponse.json(
         { error: 'Invalid email or password' },
         { status: 401 }
       );
     }
 
-    const token = await createSessionToken(email.trim().toLowerCase());
+    const token = await createSessionToken(admin.email);
     const res = NextResponse.json({
       success: true,
-      role: 'admin',
-      email: email.trim().toLowerCase(),
+      role: admin.role,
+      email: admin.email,
     });
 
     res.cookies.set(SESSION_COOKIE, token, {
@@ -44,6 +50,20 @@ export async function POST(req: NextRequest) {
     return res;
   } catch (error) {
     console.error('POST /api/auth/login error:', error);
-    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    const missingDb = !process.env.DATABASE_URL;
+    return NextResponse.json(
+      {
+        error: missingDb
+          ? 'DATABASE_URL is not set on this deployment'
+          : 'Login failed',
+        hint: missingDb
+          ? 'Add DATABASE_URL in Vercel → Environment Variables, then Redeploy'
+          : message.includes("Can't reach database") || message.includes('P1001')
+            ? 'Database unreachable — check DATABASE_URL / Neon project'
+            : undefined,
+      },
+      { status: 500 }
+    );
   }
 }
