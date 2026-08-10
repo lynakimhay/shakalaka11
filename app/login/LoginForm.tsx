@@ -92,6 +92,11 @@ export default function LoginPage() {
           <p className="mt-2 text-sm text-white/60">
             Admin login · Shakalaka Movie
           </p>
+          <p className="mt-3 text-xs text-white/40 max-w-sm">
+            Default admin:{' '}
+            <span className="text-white/70">admin@shakalaka.com</span> /{' '}
+            <span className="text-white/70">shakalaka@123</span>
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

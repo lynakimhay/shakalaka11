@@ -8,14 +8,8 @@ export type SessionPayload = {
 };
 
 function getAuthSecret() {
+  // Session signing only — admin email/password live in the database.
   return process.env.AUTH_SECRET || 'shakalaka-dev-secret-change-me';
-}
-
-export function getAdminCredentials() {
-  return {
-    email: (process.env.ADMIN_EMAIL || 'admin@shakalaka.local').trim().toLowerCase(),
-    password: process.env.ADMIN_PASSWORD || 'shakalakaadmin',
-  };
 }
 
 function toBase64Url(bytes: ArrayBuffer | Uint8Array) {
@@ -80,10 +74,4 @@ export async function verifySessionToken(
   } catch {
     return null;
   }
-}
-
-export function validateAdminLogin(email: string, password: string) {
-  const admin = getAdminCredentials();
-  const normalized = email.trim().toLowerCase();
-  return normalized === admin.email && password === admin.password;
 }
